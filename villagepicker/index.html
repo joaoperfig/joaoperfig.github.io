@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0">
+<title>Villager Picker</title>
+<style>
+body {
+    background-image: url('bg.jpg');
+    color:#000;
+    font-family:verdana, sans-serif;
+    font-size:10pt;
+    margin:0;
+    padding:10px;
+}
+
+a:link, a:visited {
+    color:#008;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+a:active, a:hover {
+    color:#ACF;
+}
+
+.info {
+    font-weight:bold;
+}
+
+button {
+    font-family:inherit;
+    cursor:pointer;
+    border:0;
+    border-radius:3px;
+    padding:0.3em 0.5em;
+    background:#CCC;
+    color:#000;
+}
+
+button:hover {
+    background:#DDD;
+}
+
+button.disabled {
+    background:#DDD;
+    color:#888;
+    cursor:not-allowed;
+}
+
+button.disabled:hover {
+    background:#DDD;
+}
+
+#container {
+    position:relative;
+    margin-left:-10px;
+    margin-right:-10px;
+    padding:10px;
+    overflow:hidden;
+}
+
+@media (min-width:1024px) {
+    /* Put the found favorites beside the picking div when the window is sufficiently large */
+    #picking {
+        float:left;
+        width:636px;
+    }
+
+    #secondary {
+        margin-left:646px;
+    }
+}
+
+@media (min-width:1300px) {
+    /* Once we get to the point where 636px is less than half of the width of the screen, make the picking div just take up half */
+    #picking {
+        width:50%;
+    }
+
+    #secondary {
+        margin-left:51%;
+    }
+}
+
+#pick {
+    background:#58F;
+    color:#FFF;
+    font-size:larger;
+    font-weight:bold;
+    width:6em;
+    border-radius:5px;
+    margin-right:10px;
+}
+
+#pick.disabled {
+    background:#ACF;
+}
+
+#pick:hover {
+    background:#ACF;
+}
+
+.item-list {
+    padding:0;
+    list-style-type:none;
+    line-height:100px;
+}
+
+.item-list li {
+    margin:0;
+    display:inline-block;
+    height:100px;
+    width:100px;
+    line-height:100px;
+    border:3px solid transparent;
+    text-align:center;
+    position:relative;
+    vertical-align:top;
+    overflow:hidden;
+    border-radius:100%;
+    background:#F7F7F7;
+    color:#000;
+}
+
+.item-list li img {
+    vertical-align:middle;
+    max-height:100%;
+    max-width:100%;
+}
+
+.item-list li span {
+    display:inline-block;
+    vertical-align:middle;
+    line-height:1.2;
+}
+
+@media (max-width:636px) {
+    .item-list {
+        line-height:75px;
+    }
+
+    .item-list li {
+        line-height:75px;
+        height:75px;
+        width:75px;
+    }
+}
+
+@media (max-width:423px) {
+    .item-list {
+        line-height:50px;
+    }
+
+    .item-list li {
+        line-height:50px;
+        height:50px;
+        width:50px;
+    }
+}
+
+#evaluating li {
+    cursor:pointer;
+}
+
+#favorites li {
+    cursor:move;
+}
+
+.item-list li:hover {
+    background:#CDF;
+}
+
+.item-list.sorting li:hover {
+    background:#F7F7F7;
+}
+
+#evaluating li.selected {
+    border:3px solid #7AC;
+}
+
+#evaluating, #buttons {
+    text-align:center;
+    margin:auto;
+}
+
+#evaluating li.notice {
+    width:auto;
+    height:auto;
+    max-width:260px;
+    margin:auto;
+    background:#F7F7F7;
+    border-radius:10px;
+    padding:30px 30px;
+    color:#000;
+    text-align:center;
+    line-height:1.4;
+    cursor:auto;
+    font-size:10pt;
+}
+
+#buttons {
+    margin-top:30px;
+    position:relative;
+    z-index:3;
+}
+</style>
+</head>
+<body>
+<h1>Villager Picker</h1>
+
+<p>Pick the villagers you prefer:</p>
+
+<div id="container">
+
+<div id="picking">
+<ul id="evaluating" class="item-list">
+</ul>
+
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+</div>
+
+<div id="secondary">
+<h2>Found favorites</h2>
+
+<ol id="favorites" class="item-list">
+</ol>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="picker.js"></script>
+<script src="picker-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.7.0/Sortable.min.js"></script>
+<script>
+'use strict';
+
+var items = [
+    {id: 'vil0', name: 'Admiral', image: 'images/Admiral.png'},
+    {id: 'vil1', name: 'Agent S', image: 'images/Agent_S.png'},
+    {id: 'vil2', name: 'Agnes', image: 'images/Agnes.png'},
+    {id: 'vil3', name: 'Al', image: 'images/Al.png'},
+    {id: 'vil4', name: 'Alfonso', image: 'images/Alfonso.png'},
+    {id: 'vil5', name: 'Alice', image: 'images/Alice.png'},
+    {id: 'vil6', name: 'Alli', image: 'images/Alli.png'},
+    {id: 'vil7', name: 'Amelia', image: 'images/Amelia.png'},
+    {id: 'vil8', name: 'Anabelle', image: 'images/Anabelle.png'},
+    {id: 'vil9', name: 'Anchovy', image: 'images/Anchovy.png'},
+    {id: 'vil10', name: 'Angus', image: 'images/Angus.png'},
+    {id: 'vil11', name: 'Anicotti', image: 'images/Anicotti.png'},
+    {id: 'vil12', name: 'Ankha', image: 'images/Ankha.png'},
+    {id: 'vil13', name: 'Annalisa', image: 'images/Annalisa.png'},
+    {id: 'vil14', name: 'Annalise', image: 'images/Annalise.png'},
+    {id: 'vil15', name: 'Antonio', image: 'images/Antonio.png'},
+    {id: 'vil16', name: 'Apollo', image: 'images/Apollo.png'},
+    {id: 'vil17', name: 'Apple', image: 'images/Apple.png'},
+    {id: 'vil18', name: 'Astrid', image: 'images/Astrid.png'},
+    {id: 'vil19', name: 'Audie', image: 'images/Audie.png'},
+    {id: 'vil20', name: 'Aurora', image: 'images/Aurora.png'},
+    {id: 'vil21', name: 'Ava', image: 'images/Ava.png'},
+    {id: 'vil22', name: 'Avery', image: 'images/Avery.png'},
+    {id: 'vil23', name: 'Axel', image: 'images/Axel.png'},
+    {id: 'vil24', name: 'Baabara', image: 'images/Baabara.png'},
+    {id: 'vil25', name: 'Bam', image: 'images/Bam.png'},
+    {id: 'vil26', name: 'Bangle', image: 'images/Bangle.png'},
+    {id: 'vil27', name: 'Barold', image: 'images/Barold.png'},
+    {id: 'vil28', name: 'Bea', image: 'images/Bea.png'},
+    {id: 'vil29', name: 'Beardo', image: 'images/Beardo.png'},
+    {id: 'vil30', name: 'Beau', image: 'images/Beau.png'},
+    {id: 'vil31', name: 'Becky', image: 'images/Becky.png'},
+    {id: 'vil32', name: 'Bella', image: 'images/Bella.png'},
+    {id: 'vil33', name: 'Benedict', image: 'images/Benedict.png'},
+    {id: 'vil34', name: 'Benjamin', image: 'images/Benjamin.png'},
+    {id: 'vil35', name: 'Bertha', image: 'images/Bertha.png'},
+    {id: 'vil36', name: 'Bettina', image: 'images/Bettina.png'},
+    {id: 'vil37', name: 'Bianca', image: 'images/Bianca.png'},
+    {id: 'vil38', name: 'Biff', image: 'images/Biff.png'},
+    {id: 'vil39', name: 'Big Top', image: 'images/Big_Top.png'},
+    {id: 'vil40', name: 'Bill', image: 'images/Bill.png'},
+    {id: 'vil41', name: 'Billy', image: 'images/Billy.png'},
+    {id: 'vil42', name: 'Biskit', image: 'images/Biskit.png'},
+    {id: 'vil43', name: 'Bitty', image: 'images/Bitty.png'},
+    {id: 'vil44', name: 'Blaire', image: 'images/Blaire.png'},
+    {id: 'vil45', name: 'Blanche', image: 'images/Blanche.png'},
+    {id: 'vil46', name: 'Bluebear', image: 'images/Bluebear.png'},
+    {id: 'vil47', name: 'Bob', image: 'images/Bob.png'},
+    {id: 'vil48', name: 'Bonbon', image: 'images/Bonbon.png'},
+    {id: 'vil49', name: 'Bones', image: 'images/Bones.png'},
+    {id: 'vil50', name: 'Boomer', image: 'images/Boomer.png'},
+    {id: 'vil51', name: 'Boone', image: 'images/Boone.png'},
+    {id: 'vil52', name: 'Boots', image: 'images/Boots.png'},
+    {id: 'vil53', name: 'Boris', image: 'images/Boris.png'},
+    {id: 'vil54', name: 'Boyd', image: 'images/Boyd.png'},
+    {id: 'vil55', name: 'Bree', image: 'images/Bree.png'},
+    {id: 'vil56', name: 'Broccolo', image: 'images/Broccolo.png'},
+    {id: 'vil57', name: 'Broffina', image: 'images/Broffina.png'},
+    {id: 'vil58', name: 'Bruce', image: 'images/Bruce.png'},
+    {id: 'vil59', name: 'Bubbles', image: 'images/Bubbles.png'},
+    {id: 'vil60', name: 'Buck', image: 'images/Buck.png'},
+    {id: 'vil61', name: 'Bud', image: 'images/Bud.png'},
+    {id: 'vil62', name: 'Bunnie', image: 'images/Bunnie.png'},
+    {id: 'vil63', name: 'Butch', image: 'images/Butch.png'},
+    {id: 'vil64', name: 'Buzz', image: 'images/Buzz.png'},
+    {id: 'vil65', name: 'Cally', image: 'images/Cally.png'},
+    {id: 'vil66', name: 'Camofrog', image: 'images/Camofrog.png'},
+    {id: 'vil67', name: 'Canberra', image: 'images/Canberra.png'},
+    {id: 'vil68', name: 'Candi', image: 'images/Candi.png'},
+    {id: 'vil69', name: 'Carmen', image: 'images/Carmen.png'},
+    {id: 'vil70', name: 'Caroline', image: 'images/Caroline.png'},
+    {id: 'vil71', name: 'Carrie', image: 'images/Carrie.png'},
+    {id: 'vil72', name: 'Cashmere', image: 'images/Cashmere.png'},
+    {id: 'vil73', name: 'Celia', image: 'images/Celia.png'},
+    {id: 'vil74', name: 'Cesar', image: 'images/Cesar.png'},
+    {id: 'vil75', name: 'Chadder', image: 'images/Chadder.png'},
+    {id: 'vil76', name: 'Chai', image: 'images/Chai.png'},
+    {id: 'vil77', name: 'Charlise', image: 'images/Charlise.png'},
+    {id: 'vil78', name: 'Chelsea', image: 'images/Chelsea.png'},
+    {id: 'vil79', name: 'Cheri', image: 'images/Cheri.png'},
+    {id: 'vil80', name: 'Cherry', image: 'images/Cherry.png'},
+    {id: 'vil81', name: 'Chester', image: 'images/Chester.png'},
+    {id: 'vil82', name: 'Chevre', image: 'images/Chevre.png'},
+    {id: 'vil83', name: 'Chief', image: 'images/Chief.png'},
+    {id: 'vil84', name: 'Chops', image: 'images/Chops.png'},
+    {id: 'vil85', name: 'Chow', image: 'images/Chow.png'},
+    {id: 'vil86', name: 'Chrissy', image: 'images/Chrissy.png'},
+    {id: 'vil87', name: 'Claude', image: 'images/Claude.png'},
+    {id: 'vil88', name: 'Claudia', image: 'images/Claudia.png'},
+    {id: 'vil89', name: 'Clay', image: 'images/Clay.png'},
+    {id: 'vil90', name: 'Cleo', image: 'images/Cleo.png'},
+    {id: 'vil91', name: 'Clyde', image: 'images/Clyde.png'},
+    {id: 'vil92', name: 'Coach', image: 'images/Coach.png'},
+    {id: 'vil93', name: 'Cobb', image: 'images/Cobb.png'},
+    {id: 'vil94', name: 'Coco', image: 'images/Coco.png'},
+    {id: 'vil95', name: 'Cole', image: 'images/Cole.png'},
+    {id: 'vil96', name: 'Colton', image: 'images/Colton.png'},
+    {id: 'vil97', name: 'Cookie', image: 'images/Cookie.png'},
+    {id: 'vil98', name: 'Cousteau', image: 'images/Cousteau.png'},
+    {id: 'vil99', name: 'Cranston', image: 'images/Cranston.png'},
+    {id: 'vil100', name: 'Croque', image: 'images/Croque.png'},
+    {id: 'vil101', name: 'Cube', image: 'images/Cube.png'},
+    {id: 'vil102', name: 'Curlos', image: 'images/Curlos.png'},
+    {id: 'vil103', name: 'Curly', image: 'images/Curly.png'},
+    {id: 'vil104', name: 'Curt', image: 'images/Curt.png'},
+    {id: 'vil105', name: 'Cyd', image: 'images/Cyd.png'},
+    {id: 'vil106', name: 'Cyrano', image: 'images/Cyrano.png'},
+    {id: 'vil107', name: 'Daisy', image: 'images/Daisy.png'},
+    {id: 'vil108', name: 'Deena', image: 'images/Deena.png'},
+    {id: 'vil109', name: 'Deirdre', image: 'images/Deirdre.png'},
+    {id: 'vil110', name: 'Del', image: 'images/Del.png'},
+    {id: 'vil111', name: 'Deli', image: 'images/Deli.png'},
+    {id: 'vil112', name: 'Derwin', image: 'images/Derwin.png'},
+    {id: 'vil113', name: 'Diana', image: 'images/Diana.png'},
+    {id: 'vil114', name: 'Diva', image: 'images/Diva.png'},
+    {id: 'vil115', name: 'Dizzy', image: 'images/Dizzy.png'},
+    {id: 'vil116', name: 'Dobie', image: 'images/Dobie.png'},
+    {id: 'vil117', name: 'Doc', image: 'images/Doc.png'},
+    {id: 'vil118', name: 'Dom', image: 'images/Dom.png'},
+    {id: 'vil119', name: 'Dora', image: 'images/Dora.png'},
+    {id: 'vil120', name: 'Dotty', image: 'images/Dotty.png'},
+    {id: 'vil121', name: 'Drago', image: 'images/Drago.png'},
+    {id: 'vil122', name: 'Drake', image: 'images/Drake.png'},
+    {id: 'vil123', name: 'Drift', image: 'images/Drift.png'},
+    {id: 'vil124', name: 'Ed', image: 'images/Ed.png'},
+    {id: 'vil125', name: 'Egbert', image: 'images/Egbert.png'},
+    {id: 'vil126', name: 'Elise', image: 'images/Elise.png'},
+    {id: 'vil127', name: 'Ellie', image: 'images/Ellie.png'},
+    {id: 'vil128', name: 'Elmer', image: 'images/Elmer.png'},
+    {id: 'vil129', name: 'Eloise', image: 'images/Eloise.png'},
+    {id: 'vil130', name: 'Elvis', image: 'images/Elvis.png'},
+    {id: 'vil131', name: 'Erik', image: 'images/Erik.png'},
+    {id: 'vil132', name: 'Étoile', image: 'images/Étoile.png'},
+    {id: 'vil133', name: 'Eugene', image: 'images/Eugene.png'},
+    {id: 'vil134', name: 'Eunice', image: 'images/Eunice.png'},
+    {id: 'vil135', name: 'Fang', image: 'images/Fang.png'},
+    {id: 'vil136', name: 'Fauna', image: 'images/Fauna.png'},
+    {id: 'vil137', name: 'Felicity', image: 'images/Felicity.png'},
+    {id: 'vil138', name: 'Filbert', image: 'images/Filbert.png'},
+    {id: 'vil139', name: 'Flip', image: 'images/Flip.png'},
+    {id: 'vil140', name: 'Flo', image: 'images/Flo.png'},
+    {id: 'vil141', name: 'Flora', image: 'images/Flora.png'},
+    {id: 'vil142', name: 'Flurry', image: 'images/Flurry.png'},
+    {id: 'vil143', name: 'Francine', image: 'images/Francine.png'},
+    {id: 'vil144', name: 'Frank', image: 'images/Frank.png'},
+    {id: 'vil145', name: 'Freckles', image: 'images/Freckles.png'},
+    {id: 'vil146', name: 'Freya', image: 'images/Freya.png'},
+    {id: 'vil147', name: 'Friga', image: 'images/Friga.png'},
+    {id: 'vil148', name: 'Frita', image: 'images/Frita.png'},
+    {id: 'vil149', name: 'Frobert', image: 'images/Frobert.png'},
+    {id: 'vil150', name: 'Fuchsia', image: 'images/Fuchsia.png'},
+    {id: 'vil151', name: 'Gabi', image: 'images/Gabi.png'},
+    {id: 'vil152', name: 'Gala', image: 'images/Gala.png'},
+    {id: 'vil153', name: 'Gaston', image: 'images/Gaston.png'},
+    {id: 'vil154', name: 'Gayle', image: 'images/Gayle.png'},
+    {id: 'vil155', name: 'Genji', image: 'images/Genji.png'},
+    {id: 'vil156', name: 'Gigi', image: 'images/Gigi.png'},
+    {id: 'vil157', name: 'Gladys', image: 'images/Gladys.png'},
+    {id: 'vil158', name: 'Gloria', image: 'images/Gloria.png'},
+    {id: 'vil159', name: 'Goldie', image: 'images/Goldie.png'},
+    {id: 'vil160', name: 'Gonzo', image: 'images/Gonzo.png'},
+    {id: 'vil161', name: 'Goose', image: 'images/Goose.png'},
+    {id: 'vil162', name: 'Graham', image: 'images/Graham.png'},
+    {id: 'vil163', name: 'Greta', image: 'images/Greta.png'},
+    {id: 'vil164', name: 'Grizzly', image: 'images/Grizzly.png'},
+    {id: 'vil165', name: 'Groucho', image: 'images/Groucho.png'},
+    {id: 'vil166', name: 'Gruff', image: 'images/Gruff.png'},
+    {id: 'vil167', name: 'Gwen', image: 'images/Gwen.png'},
+    {id: 'vil168', name: 'Hamlet', image: 'images/Hamlet.png'},
+    {id: 'vil169', name: 'Hamphrey', image: 'images/Hamphrey.png'},
+    {id: 'vil170', name: 'Hans', image: 'images/Hans.png'},
+    {id: 'vil171', name: 'Harry', image: 'images/Harry.png'},
+    {id: 'vil172', name: 'Hazel', image: 'images/Hazel.png'},
+    {id: 'vil173', name: 'Henry', image: 'images/Henry.png'},
+    {id: 'vil174', name: 'Hippeux', image: 'images/Hippeux.png'},
+    {id: 'vil175', name: 'Hopkins', image: 'images/Hopkins.png'},
+    {id: 'vil176', name: 'Hopper', image: 'images/Hopper.png'},
+    {id: 'vil177', name: 'Hornsby', image: 'images/Hornsby.png'},
+    {id: 'vil178', name: 'Huck', image: 'images/Huck.png'},
+    {id: 'vil179', name: 'Hugh', image: 'images/Hugh.png'},
+    {id: 'vil180', name: 'Iggly', image: 'images/Iggly.png'},
+    {id: 'vil181', name: 'Ike', image: 'images/Ike.png'},
+    {id: 'vil182', name: 'Jacob', image: 'images/Jacob.png'},
+    {id: 'vil183', name: 'Jacques', image: 'images/Jacques.png'},
+    {id: 'vil184', name: 'Jambette', image: 'images/Jambette.png'},
+    {id: 'vil185', name: 'Jay', image: 'images/Jay.png'},
+    {id: 'vil186', name: 'Jeremiah', image: 'images/Jeremiah.png'},
+    {id: 'vil187', name: 'Jitters', image: 'images/Jitters.png'},
+    {id: 'vil188', name: 'Joey', image: 'images/Joey.png'},
+    {id: 'vil189', name: 'Judy', image: 'images/Judy.png'},
+    {id: 'vil190', name: 'Julia', image: 'images/Julia.png'},
+    {id: 'vil191', name: 'Julian', image: 'images/Julian.png'},
+    {id: 'vil192', name: 'June', image: 'images/June.png'},
+    {id: 'vil193', name: 'Kabuki', image: 'images/Kabuki.png'},
+    {id: 'vil194', name: 'Katt', image: 'images/Katt.png'},
+    {id: 'vil195', name: 'Keaton', image: 'images/Keaton.png'},
+    {id: 'vil196', name: 'Ken', image: 'images/Ken.png'},
+    {id: 'vil197', name: 'Ketchup', image: 'images/Ketchup.png'},
+    {id: 'vil198', name: 'Kevin', image: 'images/Kevin.png'},
+    {id: 'vil199', name: 'Kid Cat', image: 'images/Kid_Cat.png'},
+    {id: 'vil200', name: 'Kidd', image: 'images/Kidd.png'},
+    {id: 'vil201', name: 'Kiki', image: 'images/Kiki.png'},
+    {id: 'vil202', name: 'Kitt', image: 'images/Kitt.png'},
+    {id: 'vil203', name: 'Kitty', image: 'images/Kitty.png'},
+    {id: 'vil204', name: 'Klaus', image: 'images/Klaus.png'},
+    {id: 'vil205', name: 'Knox', image: 'images/Knox.png'},
+    {id: 'vil206', name: 'Kody', image: 'images/Kody.png'},
+    {id: 'vil207', name: 'Kyle', image: 'images/Kyle.png'},
+    {id: 'vil208', name: 'Leonardo', image: 'images/Leonardo.png'},
+    {id: 'vil209', name: 'Leopold', image: 'images/Leopold.png'},
+    {id: 'vil210', name: 'Lily', image: 'images/Lily.png'},
+    {id: 'vil211', name: 'Limberg', image: 'images/Limberg.png'},
+    {id: 'vil212', name: 'Lionel', image: 'images/Lionel.png'},
+    {id: 'vil213', name: 'Lobo', image: 'images/Lobo.png'},
+    {id: 'vil214', name: 'Lolly', image: 'images/Lolly.png'},
+    {id: 'vil215', name: 'Lopez', image: 'images/Lopez.png'},
+    {id: 'vil216', name: 'Louie', image: 'images/Louie.png'},
+    {id: 'vil217', name: 'Lucha', image: 'images/Lucha.png'},
+    {id: 'vil218', name: 'Lucky', image: 'images/Lucky.png'},
+    {id: 'vil219', name: 'Lucy', image: 'images/Lucy.png'},
+    {id: 'vil220', name: 'Lyman', image: 'images/Lyman.png'},
+    {id: 'vil221', name: 'Mac', image: 'images/Mac.png'},
+    {id: 'vil222', name: 'Maddie', image: 'images/Maddie.png'},
+    {id: 'vil223', name: 'Maelle', image: 'images/Maelle.png'},
+    {id: 'vil224', name: 'Maggie', image: 'images/Maggie.png'},
+    {id: 'vil225', name: 'Mallary', image: 'images/Mallary.png'},
+    {id: 'vil226', name: 'Maple', image: 'images/Maple.png'},
+    {id: 'vil227', name: 'Marcel', image: 'images/Marcel.png'},
+    {id: 'vil228', name: 'Marcie', image: 'images/Marcie.png'},
+    {id: 'vil229', name: 'Margie', image: 'images/Margie.png'},
+    {id: 'vil230', name: 'Marina', image: 'images/Marina.png'},
+    {id: 'vil231', name: 'Marshal', image: 'images/Marshal.png'},
+    {id: 'vil232', name: 'Marty', image: 'images/Marty.png'},
+    {id: 'vil233', name: 'Mathilda', image: 'images/Mathilda.png'},
+    {id: 'vil234', name: 'Megan', image: 'images/Megan.png'},
+    {id: 'vil235', name: 'Melba', image: 'images/Melba.png'},
+    {id: 'vil236', name: 'Merengue', image: 'images/Merengue.png'},
+    {id: 'vil237', name: 'Merry', image: 'images/Merry.png'},
+    {id: 'vil238', name: 'Midge', image: 'images/Midge.png'},
+    {id: 'vil239', name: 'Mint', image: 'images/Mint.png'},
+    {id: 'vil240', name: 'Mira', image: 'images/Mira.png'},
+    {id: 'vil241', name: 'Miranda', image: 'images/Miranda.png'},
+    {id: 'vil242', name: 'Mitzi', image: 'images/Mitzi.png'},
+    {id: 'vil243', name: 'Moe', image: 'images/Moe.png'},
+    {id: 'vil244', name: 'Molly', image: 'images/Molly.png'},
+    {id: 'vil245', name: 'Monique', image: 'images/Monique.png'},
+    {id: 'vil246', name: 'Monty', image: 'images/Monty.png'},
+    {id: 'vil247', name: 'Moose', image: 'images/Moose.png'},
+    {id: 'vil248', name: 'Mott', image: 'images/Mott.png'},
+    {id: 'vil249', name: 'Muffy', image: 'images/Muffy.png'},
+    {id: 'vil250', name: 'Murphy', image: 'images/Murphy.png'},
+    {id: 'vil251', name: 'Nan', image: 'images/Nan.png'},
+    {id: 'vil252', name: 'Nana', image: 'images/Nana.png'},
+    {id: 'vil253', name: 'Naomi', image: 'images/Naomi.png'},
+    {id: 'vil254', name: 'Nate', image: 'images/Nate.png'},
+    {id: 'vil255', name: 'Nibbles', image: 'images/Nibbles.png'},
+    {id: 'vil256', name: 'Norma', image: 'images/Norma.png'},
+    {id: 'vil257', name: 'O\'Hare', image: 'images/O\'Hare.png'},
+    {id: 'vil258', name: 'Octavian', image: 'images/Octavian.png'},
+    {id: 'vil259', name: 'Olaf', image: 'images/Olaf.png'},
+    {id: 'vil260', name: 'Olive', image: 'images/Olive.png'},
+    {id: 'vil261', name: 'Olivia', image: 'images/Olivia.png'},
+    {id: 'vil262', name: 'Opal', image: 'images/Opal.png'},
+    {id: 'vil263', name: 'Ozzie', image: 'images/Ozzie.png'},
+    {id: 'vil264', name: 'Pancetti', image: 'images/Pancetti.png'},
+    {id: 'vil265', name: 'Pango', image: 'images/Pango.png'},
+    {id: 'vil266', name: 'Paolo', image: 'images/Paolo.png'},
+    {id: 'vil267', name: 'Papi', image: 'images/Papi.png'},
+    {id: 'vil268', name: 'Pashmina', image: 'images/Pashmina.png'},
+    {id: 'vil269', name: 'Pate', image: 'images/Pate.png'},
+    {id: 'vil270', name: 'Patty', image: 'images/Patty.png'},
+    {id: 'vil271', name: 'Paula', image: 'images/Paula.png'},
+    {id: 'vil272', name: 'Peaches', image: 'images/Peaches.png'},
+    {id: 'vil273', name: 'Peanut', image: 'images/Peanut.png'},
+    {id: 'vil274', name: 'Pecan', image: 'images/Pecan.png'},
+    {id: 'vil275', name: 'Peck', image: 'images/Peck.png'},
+    {id: 'vil276', name: 'Peewee', image: 'images/Peewee.png'},
+    {id: 'vil277', name: 'Peggy', image: 'images/Peggy.png'},
+    {id: 'vil278', name: 'Pekoe', image: 'images/Pekoe.png'},
+    {id: 'vil279', name: 'Penelope', image: 'images/Penelope.png'},
+    {id: 'vil280', name: 'Phil', image: 'images/Phil.png'},
+    {id: 'vil281', name: 'Phoebe', image: 'images/Phoebe.png'},
+    {id: 'vil282', name: 'Pierce', image: 'images/Pierce.png'},
+    {id: 'vil283', name: 'Pietro', image: 'images/Pietro.png'},
+    {id: 'vil284', name: 'Pinky', image: 'images/Pinky.png'},
+    {id: 'vil285', name: 'Piper', image: 'images/Piper.png'},
+    {id: 'vil286', name: 'Pippy', image: 'images/Pippy.png'},
+    {id: 'vil287', name: 'Plucky', image: 'images/Plucky.png'},
+    {id: 'vil288', name: 'Pompom', image: 'images/Pompom.png'},
+    {id: 'vil289', name: 'Poncho', image: 'images/Poncho.png'},
+    {id: 'vil290', name: 'Poppy', image: 'images/Poppy.png'},
+    {id: 'vil291', name: 'Portia', image: 'images/Portia.png'},
+    {id: 'vil292', name: 'Prince', image: 'images/Prince.png'},
+    {id: 'vil293', name: 'Puck', image: 'images/Puck.png'},
+    {id: 'vil294', name: 'Puddles', image: 'images/Puddles.png'},
+    {id: 'vil295', name: 'Pudge', image: 'images/Pudge.png'},
+    {id: 'vil296', name: 'Punchy', image: 'images/Punchy.png'},
+    {id: 'vil297', name: 'Purrl', image: 'images/Purrl.png'},
+    {id: 'vil298', name: 'Queenie', image: 'images/Queenie.png'},
+    {id: 'vil299', name: 'Quillson', image: 'images/Quillson.png'},
+    {id: 'vil300', name: 'Raddle', image: 'images/Raddle.png'},
+    {id: 'vil301', name: 'Rasher', image: 'images/Rasher.png'},
+    {id: 'vil302', name: 'Raymond', image: 'images/Raymond.png'},
+    {id: 'vil303', name: 'Renée', image: 'images/Renée.png'},
+    {id: 'vil304', name: 'Reneigh', image: 'images/Reneigh.png'},
+    {id: 'vil305', name: 'Rex', image: 'images/Rex.png'},
+    {id: 'vil306', name: 'Rhonda', image: 'images/Rhonda.png'},
+    {id: 'vil307', name: 'Ribbot', image: 'images/Ribbot.png'},
+    {id: 'vil308', name: 'Ricky', image: 'images/Ricky.png'},
+    {id: 'vil309', name: 'Rilla', image: 'images/Rilla.png'},
+    {id: 'vil310', name: 'Rizzo', image: 'images/Rizzo.png'},
+    {id: 'vil311', name: 'Roald', image: 'images/Roald.png'},
+    {id: 'vil312', name: 'Robin', image: 'images/Robin.png'},
+    {id: 'vil313', name: 'Rocco', image: 'images/Rocco.png'},
+    {id: 'vil314', name: 'Rocket', image: 'images/Rocket.png'},
+    {id: 'vil315', name: 'Rod', image: 'images/Rod.png'},
+    {id: 'vil316', name: 'Rodeo', image: 'images/Rodeo.png'},
+    {id: 'vil317', name: 'Rodney', image: 'images/Rodney.png'},
+    {id: 'vil318', name: 'Rolf', image: 'images/Rolf.png'},
+    {id: 'vil319', name: 'Rooney', image: 'images/Rooney.png'},
+    {id: 'vil320', name: 'Rory', image: 'images/Rory.png'},
+    {id: 'vil321', name: 'Roscoe', image: 'images/Roscoe.png'},
+    {id: 'vil322', name: 'Rosie', image: 'images/Rosie.png'},
+    {id: 'vil323', name: 'Rowan', image: 'images/Rowan.png'},
+    {id: 'vil324', name: 'Ruby', image: 'images/Ruby.png'},
+    {id: 'vil325', name: 'Rudy', image: 'images/Rudy.png'},
+    {id: 'vil326', name: 'Sally', image: 'images/Sally.png'},
+    {id: 'vil327', name: 'Samson', image: 'images/Samson.png'},
+    {id: 'vil328', name: 'Sandy', image: 'images/Sandy.png'},
+    {id: 'vil329', name: 'Savannah', image: 'images/Savannah.png'},
+    {id: 'vil330', name: 'Scoot', image: 'images/Scoot.png'},
+    {id: 'vil331', name: 'Shari', image: 'images/Shari.png'},
+    {id: 'vil332', name: 'Sheldon', image: 'images/Sheldon.png'},
+    {id: 'vil333', name: 'Shep', image: 'images/Shep.png'},
+    {id: 'vil334', name: 'Sherb', image: 'images/Sherb.png'},
+    {id: 'vil335', name: 'Simon', image: 'images/Simon.png'},
+    {id: 'vil336', name: 'Skye', image: 'images/Skye.png'},
+    {id: 'vil337', name: 'Sly', image: 'images/Sly.png'},
+    {id: 'vil338', name: 'Snake', image: 'images/Snake.png'},
+    {id: 'vil339', name: 'Snooty', image: 'images/Snooty.png'},
+    {id: 'vil340', name: 'Soleil', image: 'images/Soleil.png'},
+    {id: 'vil341', name: 'Sparro', image: 'images/Sparro.png'},
+    {id: 'vil342', name: 'Spike', image: 'images/Spike.png'},
+    {id: 'vil343', name: 'Spork', image: 'images/Spork.png'},
+    {id: 'vil344', name: 'Sprinkle', image: 'images/Sprinkle.png'},
+    {id: 'vil345', name: 'Sprocket', image: 'images/Sprocket.png'},
+    {id: 'vil346', name: 'Static', image: 'images/Static.png'},
+    {id: 'vil347', name: 'Stella', image: 'images/Stella.png'},
+    {id: 'vil348', name: 'Sterling', image: 'images/Sterling.png'},
+    {id: 'vil349', name: 'Stinky', image: 'images/Stinky.png'},
+    {id: 'vil350', name: 'Stitches', image: 'images/Stitches.png'},
+    {id: 'vil351', name: 'Stu', image: 'images/Stu.png'},
+    {id: 'vil352', name: 'Sydney', image: 'images/Sydney.png'},
+    {id: 'vil353', name: 'Sylvana', image: 'images/Sylvana.png'},
+    {id: 'vil354', name: 'Sylvia', image: 'images/Sylvia.png'},
+    {id: 'vil355', name: 'T-Bone', image: 'images/T-Bone.png'},
+    {id: 'vil356', name: 'Tabby', image: 'images/Tabby.png'},
+    {id: 'vil357', name: 'Tad', image: 'images/Tad.png'},
+    {id: 'vil358', name: 'Tammi', image: 'images/Tammi.png'},
+    {id: 'vil359', name: 'Tammy', image: 'images/Tammy.png'},
+    {id: 'vil360', name: 'Tangy', image: 'images/Tangy.png'},
+    {id: 'vil361', name: 'Tank', image: 'images/Tank.png'},
+    {id: 'vil362', name: 'Tasha', image: 'images/Tasha.png'},
+    {id: 'vil363', name: 'Teddy', image: 'images/Teddy.png'},
+    {id: 'vil364', name: 'Tex', image: 'images/Tex.png'},
+    {id: 'vil365', name: 'Tia', image: 'images/Tia.png'},
+    {id: 'vil366', name: 'Tiffany', image: 'images/Tiffany.png'},
+    {id: 'vil367', name: 'Timbra', image: 'images/Timbra.png'},
+    {id: 'vil368', name: 'Tipper', image: 'images/Tipper.png'},
+    {id: 'vil369', name: 'Toby', image: 'images/Toby.png'},
+    {id: 'vil370', name: 'Tom', image: 'images/Tom.png'},
+    {id: 'vil371', name: 'Truffles', image: 'images/Truffles.png'},
+    {id: 'vil372', name: 'Tucker', image: 'images/Tucker.png'},
+    {id: 'vil373', name: 'Tutu', image: 'images/Tutu.png'},
+    {id: 'vil374', name: 'Twiggy', image: 'images/Twiggy.png'},
+    {id: 'vil375', name: 'Tybalt', image: 'images/Tybalt.png'},
+    {id: 'vil376', name: 'Ursala', image: 'images/Ursala.png'},
+    {id: 'vil377', name: 'Velma', image: 'images/Velma.png'},
+    {id: 'vil378', name: 'Vesta', image: 'images/Vesta.png'},
+    {id: 'vil379', name: 'Vic', image: 'images/Vic.png'},
+    {id: 'vil380', name: 'Victoria', image: 'images/Victoria.png'},
+    {id: 'vil381', name: 'Violet', image: 'images/Violet.png'},
+    {id: 'vil382', name: 'Vivian', image: 'images/Vivian.png'},
+    {id: 'vil383', name: 'Vladimir', image: 'images/Vladimir.png'},
+    {id: 'vil384', name: 'Wade', image: 'images/Wade.png'},
+    {id: 'vil385', name: 'Walker', image: 'images/Walker.png'},
+    {id: 'vil386', name: 'Walt', image: 'images/Walt.png'},
+    {id: 'vil387', name: 'Wart Jr.', image: 'images/Wart_Jr..png'},
+    {id: 'vil388', name: 'Weber', image: 'images/Weber.png'},
+    {id: 'vil389', name: 'Wendy', image: 'images/Wendy.png'},
+    {id: 'vil390', name: 'Whitney', image: 'images/Whitney.png'},
+    {id: 'vil391', name: 'Willow', image: 'images/Willow.png'},
+    {id: 'vil392', name: 'Winnie', image: 'images/Winnie.png'},
+    {id: 'vil393', name: 'Wolfgang', image: 'images/Wolfgang.png'},
+    {id: 'vil394', name: 'Yuka', image: 'images/Yuka.png'},
+    {id: 'vil395', name: 'Zell', image: 'images/Zell.png'},
+    {id: 'vil396', name: 'Zucker', image: 'images/Zucker.png'},
+    {id: 'vil397', name: 'Ace', image: 'images/Ace.png'},
+    {id: 'vil398', name: 'Azalea', image: 'images/Azalea.png'},
+    {id: 'vil399', name: 'Cephalobot', image: 'images/Cephalobot.png'},
+    {id: 'vil400', name: 'Chabwick', image: 'images/Chabwick.png'},
+    {id: 'vil401', name: 'Faith', image: 'images/Faith.png'},
+    {id: 'vil402', name: 'Frett', image: 'images/Frett.png'},
+    {id: 'vil403', name: 'Ione', image: 'images/Ione.png'},
+    {id: 'vil404', name: 'Marlo', image: 'images/Marlo.png'},
+    {id: 'vil405', name: 'Petri', image: 'images/Petri.png'},
+    {id: 'vil406', name: 'Quinn', image: 'images/Quinn.png'},
+    {id: 'vil407', name: 'Rio', image: 'images/Rio.png'},
+    {id: 'vil408', name: 'Roswell', image: 'images/Roswell.png'},
+    {id: 'vil409', name: 'Sasha', image: 'images/Sasha.png'},
+    {id: 'vil410', name: 'Shino', image: 'images/Shino.png'},
+    {id: 'vil411', name: 'Tiansheng', image: 'images/Tiansheng.png'},
+    {id: 'vil412', name: 'Zoe', image: 'images/Zoe.png'}
+];
+
+var myPicker = new picker.Picker({
+    items: items
+});
+
+var pickerUI = new PickerUI(myPicker, {
+    elements: {
+        pick: "#pick",
+        pass: "#pass",
+        undo: "#undo",
+        redo: "#redo",
+        evaluating: "#evaluating",
+        favorites: "#favorites"
+    }
+});
+
+pickerUI.initialize();
+
+/* Sortable favorites - you can safely remove this, and the Sortable.min.js script, if you don't want to be able to sort your favorite list. */
+var sortable = new Sortable(pickerUI.elem.favorites.get(0), {
+    draggable: '.item',
+    animation: 100,
+    onStart: function() {
+        pickerUI.elem.favorites.addClass("sorting");
+    },
+    onEnd: function() {
+        pickerUI.elem.favorites.removeClass("sorting");
+    },
+    onUpdate: function() {
+        myPicker.setFavorites(pickerUI.elem.favorites.children().map(function() {
+            return pickerUI.getItem(this);
+        }).get());
+        pickerUI.update(true);
+    }
+});
+/* End sortable favorites */
+</script>
+
+
+<div style="font-size: 9px;">
+    Original code by <a href="https://github.com/antialiasis/favorite-picker">antialiasis</a>
+    <br>
+    Animal Crossing version by <a href="https://github.com/joaoperfig">joaoperfig</a>
+
+</div>
+</body>
+</html>
