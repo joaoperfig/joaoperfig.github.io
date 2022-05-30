@@ -222,7 +222,7 @@ var __extends = this && this.__extends || function() {
 					l();
 					var a, b = C.getNextObstacleY(),
 						d = F.y - b;
-					a = d > 150 * K ? c.rnd.realInRange(0, .2) : d > 100 * K ? c.rnd.realInRange(.3, .5) : d > 0 ? c.rnd.realInRange(.6, .7) : -50 * K > d ? c.rnd.realInRange(1, 1.1) : c.rnd.realInRange(.7, .8), TweenMax.delayedCall(a, k, null, this)
+					a = d > 150 * K ? c.rnd.realInRange(0, .2) : d > 100 * K ? c.rnd.realInRange(.3, .5) : d > 0 ? c.rnd.realInRange(.6, .7) : -50 * K > d ? c.rnd.realInRange(1, 1.1) : c.rnd.realInRange(.7, .8), TweenMax.delayedCall(a*7, k, null, this)
 				}
 			}
 
