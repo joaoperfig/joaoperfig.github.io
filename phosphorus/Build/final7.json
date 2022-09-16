@@ -1,0 +1,13 @@
+{
+"companyName": "JoaoFigueira",
+"productName": "Phosphorus",
+"dataUrl": "final7.data.unityweb",
+"asmCodeUrl": "final7.asm.code.unityweb",
+"asmMemoryUrl": "final7.asm.memory.unityweb",
+"asmFrameworkUrl": "final7.asm.framework.unityweb",
+"TOTAL_MEMORY": 268435456,
+"graphicsAPI": ["WebGL 2.0", "WebGL 1.0"],
+"webglContextAttributes": {"preserveDrawingBuffer": false},
+"splashScreenStyle": "Dark",
+"backgroundColor": "#231F20"
+}
