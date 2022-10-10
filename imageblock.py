@@ -47,8 +47,13 @@ for i, file in enumerate(onlyfiles):
         exif = im.info['exif']
         im.save(compfilepath, exif=exif)
     except:
-        print("No exif")
-        im.save(compfilepath)
+        try:
+            print("No exif")
+            im.save(compfilepath)
+        except:
+            print("Can't be jpg")
+            compfilepath = join(compresspath, str(i)+".png")
+            im.save(compfilepath)
 
     result += "\n" + imageblock.replace("#filename", file).replace("#filepath", filepath).replace("#compresspath", compfilepath)
 
