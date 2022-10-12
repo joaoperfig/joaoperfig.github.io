@@ -431,6 +431,12 @@ h2 {
 	text-align: center;
 }
 
+.reveal .minidesc {
+	line-height: 125%;
+	font-size: 1.2rem;
+	text-align: center;
+}
+
 .reveal-gallery p {
 	line-height: 125%;
 	font-size: 1.5rem;
@@ -498,6 +504,19 @@ h2 {
 		font-size: 1.2rem;
 		text-align: left;
 		padding-top: 1rem;
+	}
+}
+
+@media (max-width: 761px) {
+	.reveal p {
+		line-height: 100%;
+		font-size: 1.1rem;
+		padding-top: 1rem;
+	}
+	.reveal .minidesc {
+		line-height: 125%;
+		font-size: 0.9rem;
+		text-align: center;
 	}
 }
 
