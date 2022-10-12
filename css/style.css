@@ -481,7 +481,7 @@ h2 {
 .card-hover:hover .reveal {
 	height: auto;
 	visibility: visible;
-	opacity: 0.5;
+	opacity: 0.7;
 	transition: opacity 1s ease;
 	position: absolute;
 	top: 0;
