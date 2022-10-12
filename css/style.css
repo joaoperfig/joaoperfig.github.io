@@ -141,7 +141,7 @@ h2 {
 	right: 8.8rem;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 231px) {
 	h1 {
 		font-size: 2.5rem;
 	}
@@ -394,7 +394,7 @@ h2 {
 
 @media (max-width: 991px) {
 	.card-columns {
-		column-count: 1;
+		column-count: 2;
 	}
 }
 
@@ -483,7 +483,7 @@ h2 {
 	color: white;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 231px) {
 	.card-hover .reveal,
 	.card-hover:hover .reveal {
 		visibility: visible;
@@ -708,7 +708,7 @@ h2 {
 	padding-bottom: 7rem;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 231px) {
 	.footer {
 		font-size: 1.4em;
 		line-height: 180%;
