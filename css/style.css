@@ -515,7 +515,8 @@ h2 {
 	}
 	.reveal .minidesc {
 		line-height: 125%;
-		font-size: 0.9rem;
+		font-size: 0.0rem;
+		display: none;
 		text-align: center;
 	}
 }
