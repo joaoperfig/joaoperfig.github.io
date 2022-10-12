@@ -514,7 +514,7 @@ h2 {
 		padding-top: 1rem;
 	}
 	.reveal .minidesc {
-		line-height: 125%;
+		line-height: 100%;
 		font-size: 0.0rem;
 		display: none;
 		text-align: center;
